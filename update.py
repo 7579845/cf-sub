@@ -14,7 +14,6 @@ HEADERS = {
 }
 
 def fetch_uouin_ips():
-    """带有动态时间戳的请求，彻底避开网页静态缓存"""
     ts = int(time.time() * 1000)
     url = f"https://api.uouin.com/cloudflare.html?_={ts}"
     ips = {'CT': [], 'CU': [], 'CM': []}
@@ -37,7 +36,6 @@ def fetch_uouin_ips():
     return ips
 
 def fetch_164746_ips():
-    """备用 API 2"""
     ts = int(time.time() * 1000)
     url = f"https://ip.164746.xyz/ip.json?_={ts}"
     ips = {'CT': [], 'CU': [], 'CM': []}
@@ -98,8 +96,6 @@ def main():
         ips = fetch_164746_ips()
     
     fallback = get_fallback_ips()
-    
-    # 选出电信、联通、移动各 2 个最快 IP (共 6 个)
     selected_map = {}
     for isp_code, isp_name in [('CT', '电信'), ('CU', '联通'), ('CM', '移动')]:
         raw_ips = ips.get(isp_code, []) or fallback[isp_code]
@@ -112,7 +108,6 @@ def main():
     with open('template.yaml', 'r', encoding='utf-8') as f:
         template = yaml.safe_load(f)
 
-    # 精确匹配你的节点名称并替换 IP
     for proxy in template.get('proxies', []):
         p_name = proxy.get('name', '')
         if '电信优选01' in p_name and len(selected_map['电信']) >= 1:
@@ -128,7 +123,6 @@ def main():
         elif '移动优选02' in p_name and len(selected_map['移动']) >= 2:
             proxy['server'] = selected_map['移动'][1]
 
-    # 保存更新后的订阅文件
     with open('sub.yaml', 'w', encoding='utf-8') as f:
         yaml.dump(template, f, allow_unicode=True, sort_keys=False)
 
