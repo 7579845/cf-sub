@@ -6,58 +6,56 @@ import concurrent.futures
 import yaml
 
 HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    "Accept": "application/json, text/javascript, */*; q=0.01",
-    "Cache-Control": "no-cache"
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Accept": "*/*"
 }
 
-def fetch_ips_from_164746():
-    """接口 1：ip.164746.xyz JSON 数据源"""
-    ts = int(time.time() * 1000)
-    url = f"https://ip.164746.xyz/ip.json?_={ts}"
+def fetch_ips_from_github_mirrors():
+    """通过 GitHub 原生数据源获取，彻底无视 Cloudflare 5秒盾拦截"""
     ips = {'CT': [], 'CU': [], 'CM': []}
-    try:
-        resp = requests.get(url, headers=HEADERS, timeout=10)
-        if resp.status_code == 200:
-            data = resp.json()
-            for item in data:
-                ip = item.get('ip')
-                line = item.get('line', '')
-                if ip:
-                    if '电信' in line or 'CT' in line: ips['CT'].append(ip)
-                    elif '联通' in line or 'CU' in line: ips['CU'].append(ip)
-                    elif '移动' in line or 'CM' in line: ips['CM'].append(ip)
-            print(f"✅ 从 164746 成功抓取到 IP - 电信:{len(ips['CT'])} 联通:{len(ips['CU'])} 移动:{len(ips['CM'])}")
-    except Exception as e:
-        print(f"⚠️ 164746 接口抓取失败: {e}")
-    return ips
-
-def fetch_ips_from_hostmonit():
-    """接口 2：HostMonit 备用数据源"""
-    url = "https://stock.hostmonit.com/CloudFlareGslb"
-    ips = {'CT': [], 'CU': [], 'CM': []}
-    try:
-        resp = requests.post(url, headers=HEADERS, timeout=10)
-        if resp.status_code == 200:
-            data = resp.json()
-            # 提取线路 IP
-            for key, line_name in [('ct', 'CT'), ('cu', 'CU'), ('cm', 'CM')]:
-                if key in data:
-                    for item in data[key]:
-                        ip = item.get('ip') or item.get('line')
+    
+    # 多个无防刷/GitHub 原生节点数据源列表
+    sources = [
+        "https://raw.githubusercontent.com/ymyuuu/IPDB/main/cloudflare/speedtest.json",
+        "https://addressesapi.090227.xyz/CloudFlare277",
+        "https://raw.githubusercontent.com/cqyp/cloudflare-speedtest/main/ip.txt"
+    ]
+    
+    for url in sources:
+        try:
+            print(f"📡 正在尝试从数据源获取: {url}")
+            resp = requests.get(url, headers=HEADERS, timeout=8)
+            if resp.status_code == 200:
+                if url.endswith('.json'):
+                    data = resp.json()
+                    for item in data:
+                        ip = item.get('ip') or item.get('ip_address')
+                        line = item.get('line', '') or item.get('isp', '')
                         if ip and ip.count('.') == 3:
-                            ips[line_name].append(ip)
-            print("✅ 从 HostMonit 成功抓取备用 IP")
-    except Exception as e:
-        print(f"⚠️ HostMonit 接口抓取失败: {e}")
-    return ips
+                            if '电信' in line or 'CT' in line: ips['CT'].append(ip)
+                            elif '联通' in line or 'CU' in line: ips['CU'].append(ip)
+                            elif '移动' in line or 'CM' in line: ips['CM'].append(ip)
+                            else:
+                                ips['CT'].append(ip)
+                                ips['CU'].append(ip)
+                                ips['CM'].append(ip)
+                else:
+                    # 文本按行解析 IP
+                    lines = resp.text.strip().split('\n')
+                    for line in lines:
+                        ip = line.strip().split()[0] if line.strip() else ''
+                        if ip.count('.') == 3:
+                            ips['CT'].append(ip)
+                            ips['CU'].append(ip)
+                            ips['CM'].append(ip)
 
-def get_fallback_ips():
-    return {
-        'CT': ['104.16.200.6', '104.18.32.73'],
-        'CU': ['104.26.11.3', '162.159.152.185'],
-        'CM': ['141.101.114.10', '108.162.192.15']
-    }
+                if ips['CT'] or ips['CU'] or ips['CM']:
+                    print(f"✅ 成功从 {url} 获取到优质 IP！")
+                    break
+        except Exception as e:
+            print(f"⚠️ 源 {url} 请求跳过: {e}")
+            
+    return ips
 
 def test_tcp_latency(ip, port=443, timeout=1.5):
     start = time.time()
@@ -81,6 +79,8 @@ def filter_top_ips(ip_list, count=2):
                 results.append((ip, latency))
     results.sort(key=lambda x: x[1])
     selected = [item[0] for item in results[:count]]
+    
+    # 保底补全
     if len(selected) < count:
         for ip in unique_ips:
             if ip not in selected:
@@ -89,22 +89,21 @@ def filter_top_ips(ip_list, count=2):
     return selected[:count]
 
 def main():
-    print("🚀 开始获取最新 Cloudflare 优选 IP...")
-    ips = fetch_ips_from_164746()
+    print("🚀 开始抓取最新 Cloudflare 优选 IP...")
+    ips = fetch_ips_from_github_mirrors()
     
-    if not (ips['CT'] or ips['CU'] or ips['CM']):
-        print("🔄 主接口异常，正在切换备用 JSON 数据源...")
-        ips = fetch_ips_from_hostmonit()
+    # 彻底兜底方案
+    if not ips['CT']: ips['CT'] = ['104.18.38.221', '172.64.159.178']
+    if not ips['CU']: ips['CU'] = ['104.17.142.43', '162.159.152.185']
+    if not ips['CM']: ips['CM'] = ['141.101.114.10', '108.162.192.15']
 
-    fallback = get_fallback_ips()
     selected_map = {}
-    
     for isp_code, isp_name in [('CT', '电信'), ('CU', '联通'), ('CM', '移动')]:
-        raw_ips = ips.get(isp_code, []) or fallback[isp_code]
-        print(f"🔍 正在测速筛选【{isp_name}】IP (共 {len(raw_ips)} 个候选)...")
+        raw_ips = ips.get(isp_code, [])
+        print(f"🔍 正在实测筛选【{isp_name}】优质 IP...")
         top_2 = filter_top_ips(raw_ips, count=2)
         selected_map[isp_name] = top_2
-        print(f"✅ 【{isp_name}】最终优选 IP: {top_2}")
+        print(f"✅ 【{isp_name}】测速选出的最佳 IP: {top_2}")
 
     print("📝 正在注入你的 template.yaml 并生成 sub.yaml...")
     with open('template.yaml', 'r', encoding='utf-8') as f:
