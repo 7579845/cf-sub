@@ -1,0 +1,472 @@
+port: 7890
+socks-port: 7891
+mixed-port: 7890
+allow-lan: true
+mode: rule
+log-level: info
+external-controller: 0.0.0.0:9090
+dns:
+  enable: true
+  ipv6: false
+  enhanced-mode: fake-ip
+  listen: 0.0.0.0:53
+  nameserver:
+  - 119.29.29.29
+  - 223.5.5.5
+  fallback:
+  - https://1.1.1.1/dns-query
+  - https://8.8.8.8/dns-query
+proxies:
+- name: JP-01 (cloudflare.182682.xyz)
+  type: vless
+  server: cloudflare.182682.xyz
+  port: 443
+  uuid: 21a6582b-1e11-4044-b109-17f0b1a669e8
+  tls: true
+  servername: jp.7579845.xyz
+  network: ws
+  udp: true
+  ws-opts:
+    path: /
+    headers:
+      Host: jp.7579845.xyz
+- name: JP-02 (cf.877774.xyz)
+  type: vless
+  server: cf.877774.xyz
+  port: 443
+  uuid: 21a6582b-1e11-4044-b109-17f0b1a669e8
+  tls: true
+  servername: jp.7579845.xyz
+  network: ws
+  udp: true
+  ws-opts:
+    path: /
+    headers:
+      Host: jp.7579845.xyz
+- name: JP-03 (cf.yfjc.sbs)
+  type: vless
+  server: cf.yfjc.sbs
+  port: 443
+  uuid: 21a6582b-1e11-4044-b109-17f0b1a669e8
+  tls: true
+  servername: jp.7579845.xyz
+  network: ws
+  udp: true
+  ws-opts:
+    path: /
+    headers:
+      Host: jp.7579845.xyz
+- name: JP-04 (电信优选01)
+  type: vless
+  server: 104.18.32.73
+  port: 443
+  uuid: 21a6582b-1e11-4044-b109-17f0b1a669e8
+  tls: true
+  servername: jp.7579845.xyz
+  network: ws
+  udp: true
+  ws-opts:
+    path: /
+    headers:
+      Host: jp.7579845.xyz
+- name: JP-05 (电信优选02)
+  type: vless
+  server: 104.16.200.6
+  port: 443
+  uuid: 21a6582b-1e11-4044-b109-17f0b1a669e8
+  tls: true
+  servername: jp.7579845.xyz
+  network: ws
+  udp: true
+  ws-opts:
+    path: /
+    headers:
+      Host: jp.7579845.xyz
+- name: JP-06 (联通优选01)
+  type: vless
+  server: 162.159.152.185
+  port: 443
+  uuid: 21a6582b-1e11-4044-b109-17f0b1a669e8
+  tls: true
+  servername: jp.7579845.xyz
+  network: ws
+  udp: true
+  ws-opts:
+    path: /
+    headers:
+      Host: jp.7579845.xyz
+- name: JP-07 (联通优选02)
+  type: vless
+  server: 104.26.11.3
+  port: 443
+  uuid: 21a6582b-1e11-4044-b109-17f0b1a669e8
+  tls: true
+  servername: jp.7579845.xyz
+  network: ws
+  udp: true
+  ws-opts:
+    path: /
+    headers:
+      Host: jp.7579845.xyz
+- name: JP-08 (移动优选01)
+  type: vless
+  server: 108.162.192.15
+  port: 443
+  uuid: 21a6582b-1e11-4044-b109-17f0b1a669e8
+  tls: true
+  servername: jp.7579845.xyz
+  network: ws
+  udp: true
+  ws-opts:
+    path: /
+    headers:
+      Host: jp.7579845.xyz
+- name: JP-09 (移动优选02)
+  type: vless
+  server: 141.101.114.10
+  port: 443
+  uuid: 21a6582b-1e11-4044-b109-17f0b1a669e8
+  tls: true
+  servername: jp.7579845.xyz
+  network: ws
+  udp: true
+  ws-opts:
+    path: /
+    headers:
+      Host: jp.7579845.xyz
+- name: KR-01 (cf.yfjc.sbs)
+  type: vless
+  server: cf.yfjc.sbs
+  port: 443
+  uuid: d45fa605-eae6-4f92-b7fe-fb5a871c8b5e
+  tls: true
+  servername: kr.7579845.xyz
+  network: ws
+  udp: true
+  ws-opts:
+    path: /
+    headers:
+      Host: kr.7579845.xyz
+- name: KR-02 (cf.877774.xyz)
+  type: vless
+  server: cf.877774.xyz
+  port: 443
+  uuid: d45fa605-eae6-4f92-b7fe-fb5a871c8b5e
+  tls: true
+  servername: kr.7579845.xyz
+  network: ws
+  udp: true
+  ws-opts:
+    path: /
+    headers:
+      Host: kr.7579845.xyz
+- name: KR-03 (电信优选01)
+  type: vless
+  server: 104.18.32.73
+  port: 443
+  uuid: d45fa605-eae6-4f92-b7fe-fb5a871c8b5e
+  tls: true
+  servername: kr.7579845.xyz
+  network: ws
+  udp: true
+  ws-opts:
+    path: /
+    headers:
+      Host: kr.7579845.xyz
+- name: KR-04 (电信优选02)
+  type: vless
+  server: 104.16.200.6
+  port: 443
+  uuid: d45fa605-eae6-4f92-b7fe-fb5a871c8b5e
+  tls: true
+  servername: kr.7579845.xyz
+  network: ws
+  udp: true
+  ws-opts:
+    path: /
+    headers:
+      Host: kr.7579845.xyz
+- name: KR-05 (联通优选01)
+  type: vless
+  server: 162.159.152.185
+  port: 443
+  uuid: d45fa605-eae6-4f92-b7fe-fb5a871c8b5e
+  tls: true
+  servername: kr.7579845.xyz
+  network: ws
+  udp: true
+  ws-opts:
+    path: /
+    headers:
+      Host: kr.7579845.xyz
+- name: KR-06 (联通优选02)
+  type: vless
+  server: 104.26.11.3
+  port: 443
+  uuid: d45fa605-eae6-4f92-b7fe-fb5a871c8b5e
+  tls: true
+  servername: kr.7579845.xyz
+  network: ws
+  udp: true
+  ws-opts:
+    path: /
+    headers:
+      Host: kr.7579845.xyz
+- name: KR-07 (移动优选01)
+  type: vless
+  server: 108.162.192.15
+  port: 443
+  uuid: d45fa605-eae6-4f92-b7fe-fb5a871c8b5e
+  tls: true
+  servername: kr.7579845.xyz
+  network: ws
+  udp: true
+  ws-opts:
+    path: /
+    headers:
+      Host: kr.7579845.xyz
+- name: KR-08 (移动优选02)
+  type: vless
+  server: 141.101.114.10
+  port: 443
+  uuid: d45fa605-eae6-4f92-b7fe-fb5a871c8b5e
+  tls: true
+  servername: kr.7579845.xyz
+  network: ws
+  udp: true
+  ws-opts:
+    path: /
+    headers:
+      Host: kr.7579845.xyz
+- name: SG-01 (cloudflare.182682.xyz)
+  type: vless
+  server: cloudflare.182682.xyz
+  port: 443
+  uuid: a744eb52-02d8-4503-bfab-cf30e37a0197
+  tls: true
+  servername: sg.7579845.xyz
+  network: ws
+  udp: true
+  ws-opts:
+    path: /
+    headers:
+      Host: sg.7579845.xyz
+- name: SG-02 (yg6.ygkkk.dpdns.org)
+  type: vless
+  server: yg6.ygkkk.dpdns.org
+  port: 443
+  uuid: a744eb52-02d8-4503-bfab-cf30e37a0197
+  tls: true
+  servername: sg.7579845.xyz
+  network: ws
+  udp: true
+  ws-opts:
+    path: /
+    headers:
+      Host: sg.7579845.xyz
+- name: SG-03 (cf.yfjc.sbs)
+  type: vless
+  server: cf.yfjc.sbs
+  port: 443
+  uuid: a744eb52-02d8-4503-bfab-cf30e37a0197
+  tls: true
+  servername: sg.7579845.xyz
+  network: ws
+  udp: true
+  ws-opts:
+    path: /
+    headers:
+      Host: sg.7579845.xyz
+- name: SG-04 (电信优选01)
+  type: vless
+  server: 104.18.32.73
+  port: 443
+  uuid: a744eb52-02d8-4503-bfab-cf30e37a0197
+  tls: true
+  servername: sg.7579845.xyz
+  network: ws
+  udp: true
+  ws-opts:
+    path: /
+    headers:
+      Host: sg.7579845.xyz
+- name: SG-05 (电信优选02)
+  type: vless
+  server: 104.16.200.6
+  port: 443
+  uuid: a744eb52-02d8-4503-bfab-cf30e37a0197
+  tls: true
+  servername: sg.7579845.xyz
+  network: ws
+  udp: true
+  ws-opts:
+    path: /
+    headers:
+      Host: sg.7579845.xyz
+- name: SG-06 (联通优选01)
+  type: vless
+  server: 162.159.152.185
+  port: 443
+  uuid: a744eb52-02d8-4503-bfab-cf30e37a0197
+  tls: true
+  servername: sg.7579845.xyz
+  network: ws
+  udp: true
+  ws-opts:
+    path: /
+    headers:
+      Host: sg.7579845.xyz
+- name: SG-07 (联通优选02)
+  type: vless
+  server: 104.26.11.3
+  port: 443
+  uuid: a744eb52-02d8-4503-bfab-cf30e37a0197
+  tls: true
+  servername: sg.7579845.xyz
+  network: ws
+  udp: true
+  ws-opts:
+    path: /
+    headers:
+      Host: sg.7579845.xyz
+- name: SG-08 (移动优选01)
+  type: vless
+  server: 108.162.192.15
+  port: 443
+  uuid: a744eb52-02d8-4503-bfab-cf30e37a0197
+  tls: true
+  servername: sg.7579845.xyz
+  network: ws
+  udp: true
+  ws-opts:
+    path: /
+    headers:
+      Host: sg.7579845.xyz
+- name: SG-09 (移动优选02)
+  type: vless
+  server: 141.101.114.10
+  port: 443
+  uuid: a744eb52-02d8-4503-bfab-cf30e37a0197
+  tls: true
+  servername: sg.7579845.xyz
+  network: ws
+  udp: true
+  ws-opts:
+    path: /
+    headers:
+      Host: sg.7579845.xyz
+proxy-groups:
+- name: 日本节点自动选择
+  type: url-test
+  url: http://www.gstatic.com/generate_204
+  interval: 300
+  tolerance: 50
+  proxies:
+  - JP-01 (cloudflare.182682.xyz)
+  - JP-02 (cf.877774.xyz)
+  - JP-03 (cf.yfjc.sbs)
+  - JP-04 (电信优选01)
+  - JP-05 (电信优选02)
+  - JP-06 (联通优选01)
+  - JP-07 (联通优选02)
+  - JP-08 (移动优选01)
+  - JP-09 (移动优选02)
+- name: 韩国节点自动选择
+  type: url-test
+  url: http://www.gstatic.com/generate_204
+  interval: 300
+  tolerance: 50
+  proxies:
+  - KR-01 (cf.yfjc.sbs)
+  - KR-02 (cf.877774.xyz)
+  - KR-03 (电信优选01)
+  - KR-04 (电信优选02)
+  - KR-05 (联通优选01)
+  - KR-06 (联通优选02)
+  - KR-07 (移动优选01)
+  - KR-08 (移动优选02)
+- name: 新加坡节点自动选择
+  type: url-test
+  url: http://www.gstatic.com/generate_204
+  interval: 300
+  tolerance: 50
+  proxies:
+  - SG-01 (cloudflare.182682.xyz)
+  - SG-02 (yg6.ygkkk.dpdns.org)
+  - SG-03 (cf.yfjc.sbs)
+  - SG-04 (电信优选01)
+  - SG-05 (电信优选02)
+  - SG-06 (联通优选01)
+  - SG-07 (联通优选02)
+  - SG-08 (移动优选01)
+  - SG-09 (移动优选02)
+- name: AI人工智能
+  type: select
+  proxies:
+  - 日本节点自动选择
+- name: 大流量影音
+  type: select
+  proxies:
+  - 韩国节点自动选择
+- name: 非核心外网流量
+  type: select
+  proxies:
+  - 新加坡节点自动选择
+- name: FINAL
+  type: select
+  proxies:
+  - 非核心外网流量
+  - 韩国节点自动选择
+  - 日本节点自动选择
+rules:
+- GEOIP,LAN,DIRECT
+- GEOIP,CN,DIRECT
+- DOMAIN-SUFFIX,cn,DIRECT
+- DOMAIN-KEYWORD,baidu,DIRECT
+- DOMAIN-KEYWORD,taobao,DIRECT
+- DOMAIN-KEYWORD,tencent,DIRECT
+- DOMAIN-KEYWORD,alipay,DIRECT
+- DOMAIN-SUFFIX,openai.com,AI人工智能
+- DOMAIN-SUFFIX,chatgpt.com,AI人工智能
+- DOMAIN-SUFFIX,oaistatic.com,AI人工智能
+- DOMAIN-SUFFIX,oaiusercontent.com,AI人工智能
+- DOMAIN-SUFFIX,auth0.com,AI人工智能
+- DOMAIN-SUFFIX,gemini.google.com,AI人工智能
+- DOMAIN-SUFFIX,bard.google.com,AI人工智能
+- DOMAIN-SUFFIX,deepmind.google,AI人工智能
+- DOMAIN-SUFFIX,ai.google,AI人工智能
+- DOMAIN-KEYWORD,generativelanguage,AI人工智能
+- DOMAIN-SUFFIX,anthropic.com,AI人工智能
+- DOMAIN-SUFFIX,claude.ai,AI人工智能
+- DOMAIN-SUFFIX,perplexity.ai,AI人工智能
+- DOMAIN-SUFFIX,midjourney.com,AI人工智能
+- DOMAIN-SUFFIX,copilot.microsoft.com,AI人工智能
+- DOMAIN-SUFFIX,youtube.com,大流量影音
+- DOMAIN-SUFFIX,youtu.be,大流量影音
+- DOMAIN-SUFFIX,googlevideo.com,大流量影音
+- DOMAIN-SUFFIX,ytimg.com,大流量影音
+- DOMAIN-SUFFIX,netflix.com,大流量影音
+- DOMAIN-SUFFIX,nflxvideo.net,大流量影音
+- DOMAIN-SUFFIX,disneyplus.com,大流量影音
+- DOMAIN-SUFFIX,dssott.com,大流量影音
+- DOMAIN-SUFFIX,max.com,大流量影音
+- DOMAIN-SUFFIX,twitch.tv,大流量影音
+- DOMAIN-SUFFIX,google.com,非核心外网流量
+- DOMAIN-SUFFIX,gstatic.com,非核心外网流量
+- DOMAIN-SUFFIX,googleapis.com,非核心外网流量
+- DOMAIN-SUFFIX,telegram.org,非核心外网流量
+- DOMAIN-SUFFIX,t.me,非核心外网流量
+- DOMAIN-SUFFIX,x.com,非核心外网流量
+- DOMAIN-SUFFIX,twitter.com,非核心外网流量
+- DOMAIN-SUFFIX,facebook.com,非核心外网流量
+- DOMAIN-SUFFIX,instagram.com,非核心外网流量
+- DOMAIN-SUFFIX,reddit.com,非核心外网流量
+- DOMAIN-SUFFIX,discord.com,非核心外网流量
+- DOMAIN-SUFFIX,github.com,非核心外网流量
+- DOMAIN-SUFFIX,githubusercontent.com,非核心外网流量
+- DOMAIN-SUFFIX,docker.com,非核心外网流量
+- DOMAIN-SUFFIX,amazon.com,非核心外网流量
+- DOMAIN-SUFFIX,cloudflare.com,非核心外网流量
+- DOMAIN-SUFFIX,microsoft.com,非核心外网流量
+- DOMAIN-SUFFIX,apple.com,非核心外网流量
+- MATCH,FINAL
