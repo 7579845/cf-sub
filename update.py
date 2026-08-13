@@ -6,30 +6,46 @@ import concurrent.futures
 import yaml
 
 HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    "Accept": "*/*"
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Accept": "application/json, text/javascript, */*; q=0.01"
 }
 
-def fetch_ips_from_github_mirrors():
-    """通过 GitHub 原生数据源获取，彻底无视 Cloudflare 5秒盾拦截"""
+def fetch_cf2dns_ips():
+    """采用 cf2dns 同款数据源 API (Gacjie / 090227 / HostMonit)"""
     ips = {'CT': [], 'CU': [], 'CM': []}
     
-    # 多个无防刷/GitHub 原生节点数据源列表
-    sources = [
-        "https://raw.githubusercontent.com/ymyuuu/IPDB/main/cloudflare/speedtest.json",
+    # cf2dns 核心调用的开源 API 列表
+    api_urls = [
         "https://addressesapi.090227.xyz/CloudFlare277",
-        "https://raw.githubusercontent.com/cqyp/cloudflare-speedtest/main/ip.txt"
+        "https://api.v2.gacjie.cn/cf/ips",
+        "https://stock.hostmonit.com/CloudflareGslb"
     ]
     
-    for url in sources:
+    for url in api_urls:
         try:
-            print(f"📡 正在尝试从数据源获取: {url}")
-            resp = requests.get(url, headers=HEADERS, timeout=8)
+            print(f"📡 正在调用 cf2dns 优选接口: {url}")
+            if "hostmonit" in url:
+                resp = requests.post(url, headers=HEADERS, timeout=8)
+            else:
+                resp = requests.get(url, headers=HEADERS, timeout=8)
+                
             if resp.status_code == 200:
-                if url.endswith('.json'):
-                    data = resp.json()
+                data = resp.json()
+                
+                # 兼容不同接口的 JSON 返回格式
+                if isinstance(data, dict):
+                    # HostMonit 或 Gacjie 格式
+                    for key in ['ct', 'cu', 'cm', 'CT', 'CU', 'CM', 'telecom', 'unicom', 'mobile']:
+                        target_isp = 'CT' if key.lower() in ['ct', 'telecom'] else ('CU' if key.lower() in ['cu', 'unicom'] else 'CM')
+                        if key in data and isinstance(data[key], list):
+                            for item in data[key]:
+                                ip = item.get('ip') or item.get('line')
+                                if ip and ip.count('.') == 3:
+                                    ips[target_isp].append(ip)
+                elif isinstance(data, list):
+                    # 090227 / 列表格式
                     for item in data:
-                        ip = item.get('ip') or item.get('ip_address')
+                        ip = item.get('ip')
                         line = item.get('line', '') or item.get('isp', '')
                         if ip and ip.count('.') == 3:
                             if '电信' in line or 'CT' in line: ips['CT'].append(ip)
@@ -39,21 +55,12 @@ def fetch_ips_from_github_mirrors():
                                 ips['CT'].append(ip)
                                 ips['CU'].append(ip)
                                 ips['CM'].append(ip)
-                else:
-                    # 文本按行解析 IP
-                    lines = resp.text.strip().split('\n')
-                    for line in lines:
-                        ip = line.strip().split()[0] if line.strip() else ''
-                        if ip.count('.') == 3:
-                            ips['CT'].append(ip)
-                            ips['CU'].append(ip)
-                            ips['CM'].append(ip)
 
                 if ips['CT'] or ips['CU'] or ips['CM']:
-                    print(f"✅ 成功从 {url} 获取到优质 IP！")
+                    print(f"✅ 成功从 {url} 获取到优选 IP！")
                     break
         except Exception as e:
-            print(f"⚠️ 源 {url} 请求跳过: {e}")
+            print(f"⚠️ 接口 {url} 请求跳过: {e}")
             
     return ips
 
@@ -80,7 +87,7 @@ def filter_top_ips(ip_list, count=2):
     results.sort(key=lambda x: x[1])
     selected = [item[0] for item in results[:count]]
     
-    # 保底补全
+    # 补全保底
     if len(selected) < count:
         for ip in unique_ips:
             if ip not in selected:
@@ -89,10 +96,10 @@ def filter_top_ips(ip_list, count=2):
     return selected[:count]
 
 def main():
-    print("🚀 开始抓取最新 Cloudflare 优选 IP...")
-    ips = fetch_ips_from_github_mirrors()
+    print("🚀 启动 cf2dns 同款算法抓取 Cloudflare 优选 IP...")
+    ips = fetch_cf2dns_ips()
     
-    # 彻底兜底方案
+    # 极罕见情况下的兜底 IP
     if not ips['CT']: ips['CT'] = ['104.18.38.221', '172.64.159.178']
     if not ips['CU']: ips['CU'] = ['104.17.142.43', '162.159.152.185']
     if not ips['CM']: ips['CM'] = ['141.101.114.10', '108.162.192.15']
@@ -100,10 +107,10 @@ def main():
     selected_map = {}
     for isp_code, isp_name in [('CT', '电信'), ('CU', '联通'), ('CM', '移动')]:
         raw_ips = ips.get(isp_code, [])
-        print(f"🔍 正在实测筛选【{isp_name}】优质 IP...")
+        print(f"🔍 正在测速筛选【{isp_name}】优质 IP (候选 {len(raw_ips)} 个)...")
         top_2 = filter_top_ips(raw_ips, count=2)
         selected_map[isp_name] = top_2
-        print(f"✅ 【{isp_name}】测速选出的最佳 IP: {top_2}")
+        print(f"✅ 【{isp_name}】最终优选 IP: {top_2}")
 
     print("📝 正在注入你的 template.yaml 并生成 sub.yaml...")
     with open('template.yaml', 'r', encoding='utf-8') as f:
