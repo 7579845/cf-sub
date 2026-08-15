@@ -41,7 +41,7 @@ def flatten_ip_items(data_obj):
     return extracted_items
 
 def fetch_and_rank_ips():
-    """抓取 IP，并按条件做分段优化排序"""
+    """抓取 IP，并采用动态平衡算法排序"""
     ip_records = []
     seen_ips = set()
 
@@ -111,21 +111,34 @@ def fetch_and_rank_ips():
         except Exception as e:
             print(f"   ❌ 抓取发生异常: {e}")
 
-    # **核心逻辑：条件分段排序**
-    # 1. 速度 >= 80 MB/s：高速组，【速度优先】（速度从大到小，延迟从小到大）
-    # 2. 50 <= 速度 < 80 MB/s：中速组，【速度优先】
-    # 3. 速度 < 50 MB/s（含 0 速度）：低速/保底组，【延迟优先】（延迟从小到大，速度从大到小）
-    def custom_sort_rule(x):
+    # **核心逻辑：平衡评分与分段算法**
+    def calculate_score_and_rule(x):
         s = x['speed']
         l = x['latency']
+        
+        # 1. 速度大于 80MB/s：两者平衡优先
+        # 综合分 = 速度 - (延迟 * 2)，使得速度只差一点点时，低延迟能够反超
         if s >= 80.0:
-            return (1, -s, l)      # 梯队 1：速度降序，延迟升序
+            score = s - (l * 2.0)
+            return (1, -score), "⚖️双向平衡"
+        
+        # 2. 50MB/s ~ 80MB/s 之间：适度平衡
         elif s >= 50.0:
-            return (2, -s, l)      # 梯队 2：速度降序，延迟升序
+            score = s - (l * 1.0)
+            return (2, -score), "速度兼顾"
+        
+        # 3. 速度小于 50MB/s（含 0 速度）：延迟绝对优先
         else:
-            return (3, l, -s)      # 梯队 3：延迟升序，速度降序
+            return (3, l, -s), "🎯延迟优先"
 
-    ip_records.sort(key=custom_sort_rule)
+    # 为每个节点计算得分及规则标签
+    for rec in ip_records:
+        sort_key, rule_tag = calculate_score_and_rule(rec)
+        rec['_sort_key'] = sort_key
+        rec['_rule_tag'] = rule_tag
+
+    # 按照计算出来的 sort_key 统一排序
+    ip_records.sort(key=lambda x: x['_sort_key'])
 
     # 线路归类
     line_map = {'电信': [], '联通': [], '移动': [], '多线': []}
@@ -149,12 +162,10 @@ def fetch_and_rank_ips():
     print(f"\n📊 汇总结果：电信({len(line_map['电信'])}个) | 联通({len(line_map['联通'])}个) | 移动({len(line_map['移动'])}个) | 多线/cn/AllAvg({len(line_map['多线'])}个)")
     
     if ip_records:
-        print("\n📋 【所有优选 IP 动态分段排行榜】")
+        print("\n📋 【所有优选 IP 动态平衡排行榜】")
         for idx, rec in enumerate(ip_records, 1):
             line_display = rec['line'].upper() if rec['line'] else "其它"
-            # 标注当前 IP 触发的排序规则
-            tag = "⚡高速优先" if rec['speed'] >= 80 else ("速度优先" if rec['speed'] >= 50 else "🎯延迟优先")
-            print(f"   [{idx:02d}] IP: {rec['ip']:<15} | 线路: {line_display:<6} | 速度: {rec['speed']:>6.1f} MB/s | 延迟: {rec['latency']:>5.1f} ms | 规则: {tag}")
+            print(f"   [{idx:02d}] IP: {rec['ip']:<15} | 线路: {line_display:<6} | 速度: {rec['speed']:>6.1f} MB/s | 延迟: {rec['latency']:>5.1f} ms | 规则: {rec['_rule_tag']}")
         print("-" * 75)
 
     return line_map, sorted_all_ips
