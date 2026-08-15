@@ -17,20 +17,7 @@ dns:
   - https://1.1.1.1/dns-query
   - https://8.8.8.8/dns-query
 proxies:
-- name: JP-01 (cloudflare.182682.xyz)
-  type: vless
-  server: cloudflare.182682.xyz
-  port: 443
-  uuid: 21a6582b-1e11-4044-b109-17f0b1a669e8
-  tls: true
-  servername: jp.7579845.xyz
-  network: ws
-  udp: true
-  ws-opts:
-    path: /
-    headers:
-      Host: jp.7579845.xyz
-- name: JP-02 (cf.877774.xyz)
+- name: JP-01 (cf.877774.xyz)
   type: vless
   server: cf.877774.xyz
   port: 443
@@ -43,7 +30,7 @@ proxies:
     path: /
     headers:
       Host: jp.7579845.xyz
-- name: JP-03 (cf.yfjc.sbs)
+- name: JP-02 (cf.yfjc.sbs)
   type: vless
   server: cf.yfjc.sbs
   port: 443
@@ -56,7 +43,7 @@ proxies:
     path: /
     headers:
       Host: jp.7579845.xyz
-- name: JP-04 (电信优选01)
+- name: JP-03 (电信优选01)
   type: vless
   server: 172.64.229.15
   port: 443
@@ -69,7 +56,7 @@ proxies:
     path: /
     headers:
       Host: jp.7579845.xyz
-- name: JP-05 (电信优选02)
+- name: JP-04 (电信优选02)
   type: vless
   server: 172.66.44.119
   port: 443
@@ -82,7 +69,33 @@ proxies:
     path: /
     headers:
       Host: jp.7579845.xyz
-- name: JP-06 (联通优选01)
+- name: JP-05 (电信优选03)
+  type: vless
+  server: 104.17.52.141
+  port: 443
+  uuid: 21a6582b-1e11-4044-b109-17f0b1a669e8
+  tls: true
+  servername: jp.7579845.xyz
+  network: ws
+  udp: true
+  ws-opts:
+    path: /
+    headers:
+      Host: jp.7579845.xyz
+- name: JP-06 (电信优选04)
+  type: vless
+  server: 104.19.77.157
+  port: 443
+  uuid: 21a6582b-1e11-4044-b109-17f0b1a669e8
+  tls: true
+  servername: jp.7579845.xyz
+  network: ws
+  udp: true
+  ws-opts:
+    path: /
+    headers:
+      Host: jp.7579845.xyz
+- name: JP-07 (联通优选01)
   type: vless
   server: 104.17.142.43
   port: 443
@@ -95,7 +108,7 @@ proxies:
     path: /
     headers:
       Host: jp.7579845.xyz
-- name: JP-07 (联通优选02)
+- name: JP-08 (联通优选02)
   type: vless
   server: 162.159.152.185
   port: 443
@@ -108,7 +121,33 @@ proxies:
     path: /
     headers:
       Host: jp.7579845.xyz
-- name: JP-08 (移动优选01)
+- name: JP-09 (联通优选03)
+  type: vless
+  server: 104.16.160.1
+  port: 443
+  uuid: 21a6582b-1e11-4044-b109-17f0b1a669e8
+  tls: true
+  servername: jp.7579845.xyz
+  network: ws
+  udp: true
+  ws-opts:
+    path: /
+    headers:
+      Host: jp.7579845.xyz
+- name: JP-10 (联通优选04)
+  type: vless
+  server: 104.17.160.1
+  port: 443
+  uuid: 21a6582b-1e11-4044-b109-17f0b1a669e8
+  tls: true
+  servername: jp.7579845.xyz
+  network: ws
+  udp: true
+  ws-opts:
+    path: /
+    headers:
+      Host: jp.7579845.xyz
+- name: JP-11 (移动优选01)
   type: vless
   server: 141.101.114.10
   port: 443
@@ -121,9 +160,35 @@ proxies:
     path: /
     headers:
       Host: jp.7579845.xyz
-- name: JP-09 (移动优选02)
+- name: JP-12 (移动优选02)
   type: vless
   server: 108.162.192.15
+  port: 443
+  uuid: 21a6582b-1e11-4044-b109-17f0b1a669e8
+  tls: true
+  servername: jp.7579845.xyz
+  network: ws
+  udp: true
+  ws-opts:
+    path: /
+    headers:
+      Host: jp.7579845.xyz
+- name: JP-13 (多线优选01)
+  type: vless
+  server: 162.159.137.85
+  port: 443
+  uuid: 21a6582b-1e11-4044-b109-17f0b1a669e8
+  tls: true
+  servername: jp.7579845.xyz
+  network: ws
+  udp: true
+  ws-opts:
+    path: /
+    headers:
+      Host: jp.7579845.xyz
+- name: JP-14 (多线优选02)
+  type: vless
+  server: 162.159.138.85
   port: 443
   uuid: 21a6582b-1e11-4044-b109-17f0b1a669e8
   tls: true
@@ -186,7 +251,33 @@ proxies:
     path: /
     headers:
       Host: kr.7579845.xyz
-- name: KR-05 (联通优选01)
+- name: KR-05 (电信优选03)
+  type: vless
+  server: 104.17.52.141
+  port: 443
+  uuid: d45fa605-eae6-4f92-b7fe-fb5a871c8b5e
+  tls: true
+  servername: kr.7579845.xyz
+  network: ws
+  udp: true
+  ws-opts:
+    path: /
+    headers:
+      Host: kr.7579845.xyz
+- name: KR-06 (电信优选04)
+  type: vless
+  server: 104.19.77.157
+  port: 443
+  uuid: d45fa605-eae6-4f92-b7fe-fb5a871c8b5e
+  tls: true
+  servername: kr.7579845.xyz
+  network: ws
+  udp: true
+  ws-opts:
+    path: /
+    headers:
+      Host: kr.7579845.xyz
+- name: KR-07 (联通优选01)
   type: vless
   server: 104.17.142.43
   port: 443
@@ -199,7 +290,7 @@ proxies:
     path: /
     headers:
       Host: kr.7579845.xyz
-- name: KR-06 (联通优选02)
+- name: KR-08 (联通优选02)
   type: vless
   server: 162.159.152.185
   port: 443
@@ -212,7 +303,33 @@ proxies:
     path: /
     headers:
       Host: kr.7579845.xyz
-- name: KR-07 (移动优选01)
+- name: KR-09 (联通优选03)
+  type: vless
+  server: 104.16.160.1
+  port: 443
+  uuid: d45fa605-eae6-4f92-b7fe-fb5a871c8b5e
+  tls: true
+  servername: kr.7579845.xyz
+  network: ws
+  udp: true
+  ws-opts:
+    path: /
+    headers:
+      Host: kr.7579845.xyz
+- name: KR-10 (联通优选04)
+  type: vless
+  server: 104.17.160.1
+  port: 443
+  uuid: d45fa605-eae6-4f92-b7fe-fb5a871c8b5e
+  tls: true
+  servername: kr.7579845.xyz
+  network: ws
+  udp: true
+  ws-opts:
+    path: /
+    headers:
+      Host: kr.7579845.xyz
+- name: KR-11 (移动优选01)
   type: vless
   server: 141.101.114.10
   port: 443
@@ -225,9 +342,35 @@ proxies:
     path: /
     headers:
       Host: kr.7579845.xyz
-- name: KR-08 (移动优选02)
+- name: KR-12 (移动优选02)
   type: vless
   server: 108.162.192.15
+  port: 443
+  uuid: d45fa605-eae6-4f92-b7fe-fb5a871c8b5e
+  tls: true
+  servername: kr.7579845.xyz
+  network: ws
+  udp: true
+  ws-opts:
+    path: /
+    headers:
+      Host: kr.7579845.xyz
+- name: KR-13 (多线优选01)
+  type: vless
+  server: 162.159.137.85
+  port: 443
+  uuid: d45fa605-eae6-4f92-b7fe-fb5a871c8b5e
+  tls: true
+  servername: kr.7579845.xyz
+  network: ws
+  udp: true
+  ws-opts:
+    path: /
+    headers:
+      Host: kr.7579845.xyz
+- name: KR-14 (多线优选02)
+  type: vless
+  server: 162.159.138.85
   port: 443
   uuid: d45fa605-eae6-4f92-b7fe-fb5a871c8b5e
   tls: true
@@ -251,20 +394,7 @@ proxies:
     path: /
     headers:
       Host: sg.7579845.xyz
-- name: SG-02 (yg6.ygkkk.dpdns.org)
-  type: vless
-  server: yg6.ygkkk.dpdns.org
-  port: 443
-  uuid: a744eb52-02d8-4503-bfab-cf30e37a0197
-  tls: true
-  servername: sg.7579845.xyz
-  network: ws
-  udp: true
-  ws-opts:
-    path: /
-    headers:
-      Host: sg.7579845.xyz
-- name: SG-03 (cf.yfjc.sbs)
+- name: SG-02 (cf.yfjc.sbs)
   type: vless
   server: cf.yfjc.sbs
   port: 443
@@ -277,7 +407,7 @@ proxies:
     path: /
     headers:
       Host: sg.7579845.xyz
-- name: SG-04 (电信优选01)
+- name: SG-03 (电信优选01)
   type: vless
   server: 172.64.229.15
   port: 443
@@ -290,7 +420,7 @@ proxies:
     path: /
     headers:
       Host: sg.7579845.xyz
-- name: SG-05 (电信优选02)
+- name: SG-04 (电信优选02)
   type: vless
   server: 172.66.44.119
   port: 443
@@ -303,7 +433,33 @@ proxies:
     path: /
     headers:
       Host: sg.7579845.xyz
-- name: SG-06 (联通优选01)
+- name: SG-05 (电信优选03)
+  type: vless
+  server: 104.17.52.141
+  port: 443
+  uuid: a744eb52-02d8-4503-bfab-cf30e37a0197
+  tls: true
+  servername: sg.7579845.xyz
+  network: ws
+  udp: true
+  ws-opts:
+    path: /
+    headers:
+      Host: sg.7579845.xyz
+- name: SG-06 (电信优选04)
+  type: vless
+  server: 104.19.77.157
+  port: 443
+  uuid: a744eb52-02d8-4503-bfab-cf30e37a0197
+  tls: true
+  servername: sg.7579845.xyz
+  network: ws
+  udp: true
+  ws-opts:
+    path: /
+    headers:
+      Host: sg.7579845.xyz
+- name: SG-07 (联通优选01)
   type: vless
   server: 104.17.142.43
   port: 443
@@ -316,7 +472,7 @@ proxies:
     path: /
     headers:
       Host: sg.7579845.xyz
-- name: SG-07 (联通优选02)
+- name: SG-08 (联通优选02)
   type: vless
   server: 162.159.152.185
   port: 443
@@ -329,7 +485,33 @@ proxies:
     path: /
     headers:
       Host: sg.7579845.xyz
-- name: SG-08 (移动优选01)
+- name: SG-09 (联通优选03)
+  type: vless
+  server: 104.16.160.1
+  port: 443
+  uuid: a744eb52-02d8-4503-bfab-cf30e37a0197
+  tls: true
+  servername: sg.7579845.xyz
+  network: ws
+  udp: true
+  ws-opts:
+    path: /
+    headers:
+      Host: sg.7579845.xyz
+- name: SG-10 (联通优选04)
+  type: vless
+  server: 104.17.160.1
+  port: 443
+  uuid: a744eb52-02d8-4503-bfab-cf30e37a0197
+  tls: true
+  servername: sg.7579845.xyz
+  network: ws
+  udp: true
+  ws-opts:
+    path: /
+    headers:
+      Host: sg.7579845.xyz
+- name: SG-11 (移动优选01)
   type: vless
   server: 141.101.114.10
   port: 443
@@ -342,9 +524,35 @@ proxies:
     path: /
     headers:
       Host: sg.7579845.xyz
-- name: SG-09 (移动优选02)
+- name: SG-12 (移动优选02)
   type: vless
   server: 108.162.192.15
+  port: 443
+  uuid: a744eb52-02d8-4503-bfab-cf30e37a0197
+  tls: true
+  servername: sg.7579845.xyz
+  network: ws
+  udp: true
+  ws-opts:
+    path: /
+    headers:
+      Host: sg.7579845.xyz
+- name: SG-13 (多线优选01)
+  type: vless
+  server: 162.159.137.85
+  port: 443
+  uuid: a744eb52-02d8-4503-bfab-cf30e37a0197
+  tls: true
+  servername: sg.7579845.xyz
+  network: ws
+  udp: true
+  ws-opts:
+    path: /
+    headers:
+      Host: sg.7579845.xyz
+- name: SG-14 (多线优选02)
+  type: vless
+  server: 162.159.138.85
   port: 443
   uuid: a744eb52-02d8-4503-bfab-cf30e37a0197
   tls: true
@@ -362,15 +570,20 @@ proxy-groups:
   interval: 300
   tolerance: 50
   proxies:
-  - JP-01 (cloudflare.182682.xyz)
-  - JP-02 (cf.877774.xyz)
-  - JP-03 (cf.yfjc.sbs)
-  - JP-04 (电信优选01)
-  - JP-05 (电信优选02)
-  - JP-06 (联通优选01)
-  - JP-07 (联通优选02)
-  - JP-08 (移动优选01)
-  - JP-09 (移动优选02)
+  - JP-01 (cf.877774.xyz)
+  - JP-02 (cf.yfjc.sbs)
+  - JP-03 (电信优选01)
+  - JP-04 (电信优选02)
+  - JP-05 (电信优选03)
+  - JP-06 (电信优选04)
+  - JP-07 (联通优选01)
+  - JP-08 (联通优选02)
+  - JP-09 (联通优选03)
+  - JP-10 (联通优选04)
+  - JP-11 (移动优选01)
+  - JP-12 (移动优选02)
+  - JP-13 (多线优选01)
+  - JP-14 (多线优选02)
 - name: 韩国节点自动选择
   type: url-test
   url: http://www.gstatic.com/generate_204
@@ -381,10 +594,16 @@ proxy-groups:
   - KR-02 (cf.877774.xyz)
   - KR-03 (电信优选01)
   - KR-04 (电信优选02)
-  - KR-05 (联通优选01)
-  - KR-06 (联通优选02)
-  - KR-07 (移动优选01)
-  - KR-08 (移动优选02)
+  - KR-05 (电信优选03)
+  - KR-06 (电信优选04)
+  - KR-07 (联通优选01)
+  - KR-08 (联通优选02)
+  - KR-09 (联通优选03)
+  - KR-10 (联通优选04)
+  - KR-11 (移动优选01)
+  - KR-12 (移动优选02)
+  - KR-13 (多线优选01)
+  - KR-14 (多线优选02)
 - name: 新加坡节点自动选择
   type: url-test
   url: http://www.gstatic.com/generate_204
@@ -392,14 +611,19 @@ proxy-groups:
   tolerance: 50
   proxies:
   - SG-01 (cloudflare.182682.xyz)
-  - SG-02 (yg6.ygkkk.dpdns.org)
-  - SG-03 (cf.yfjc.sbs)
-  - SG-04 (电信优选01)
-  - SG-05 (电信优选02)
-  - SG-06 (联通优选01)
-  - SG-07 (联通优选02)
-  - SG-08 (移动优选01)
-  - SG-09 (移动优选02)
+  - SG-02 (cf.yfjc.sbs)
+  - SG-03 (电信优选01)
+  - SG-04 (电信优选02)
+  - SG-05 (电信优选03)
+  - SG-06 (电信优选04)
+  - SG-07 (联通优选01)
+  - SG-08 (联通优选02)
+  - SG-09 (联通优选03)
+  - SG-10 (联通优选04)
+  - SG-11 (移动优选01)
+  - SG-12 (移动优选02)
+  - SG-13 (多线优选01)
+  - SG-14 (多线优选02)
 - name: AI人工智能
   type: select
   proxies:
