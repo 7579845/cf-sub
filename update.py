@@ -2,7 +2,6 @@ import requests
 import yaml
 import re
 
-# 核心优选 IP 接口
 SOURCES = [
     "https://www.wetest.vip/api/cf2dns/get_cloudflare_ip?key=o1zrmHAF&type=v4",
     "https://vps789.com/public/sum/cfIpApi"
@@ -20,8 +19,30 @@ def clean_ip(ip_str):
     match = re.search(r'\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b', str(ip_str).strip())
     return match.group(0) if match else None
 
+def flatten_ip_items(data_obj):
+    """拆解嵌套字典，自动将父级 Key (CM/CT/CU/cn/AllAvg) 转化为节点的 line 属性"""
+    extracted_items = []
+    
+    if isinstance(data_obj, list):
+        for elem in data_obj:
+            if isinstance(elem, dict):
+                extracted_items.append(elem)
+    elif isinstance(data_obj, dict):
+        for key, val in data_obj.items():
+            if isinstance(val, list):
+                for item in val:
+                    if isinstance(item, dict):
+                        # 若节点内缺少 line 标识，将父级 key (如 CM/CT/CU/AllAvg) 填入
+                        if not item.get("line") and not item.get("type") and not item.get("line_name"):
+                            item["line"] = str(key)
+                        extracted_items.append(item)
+            elif isinstance(val, dict):
+                extracted_items.extend(flatten_ip_items(val))
+                
+    return extracted_items
+
 def fetch_and_rank_ips():
-    """双接口自动兼容抓取、去重并按【速度优先，延迟其次】排序"""
+    """抓取 IP，按【速度优先，延迟其次】排序并划分线路"""
     ip_records = []
     seen_ips = set()
 
@@ -34,59 +55,52 @@ def fetch_and_rank_ips():
                 print(f"   ⚠️ 请求失败，HTTP 状态码: {resp.status_code}")
                 continue
 
-            # 1. 尝试解析 JSON 格式
             try:
                 raw_json = resp.json()
-                info_list = []
-
-                # 自动探测各种 JSON 嵌套结构 (info / data / result / 列表直接返回)
-                if isinstance(raw_json, list):
-                    info_list = raw_json
-                elif isinstance(raw_json, dict):
-                    for key in ["info", "data", "result", "ips", "list"]:
-                        if isinstance(raw_json.get(key), list):
-                            info_list = raw_json.get(key)
+                
+                # 获取数据核心字段
+                container = raw_json
+                if isinstance(raw_json, dict):
+                    for k in ["info", "data", "result", "list"]:
+                        if k in raw_json:
+                            container = raw_json[k]
                             break
-
+                
+                items_list = flatten_ip_items(container)
                 count_before = len(ip_records)
 
-                for item in info_list:
-                    if not isinstance(item, dict):
-                        continue
-                    
-                    # 兼容不同接口的 IP 字段名
+                for item in items_list:
                     c_ip = clean_ip(item.get("ip") or item.get("address") or item.get("ip_address"))
                     if c_ip and c_ip not in seen_ips:
                         seen_ips.add(c_ip)
                         
-                        # 兼容不同接口的下载速度字段 (MB/s 或 Mbps)
+                        # 速度获取
                         try:
-                            speed = float(item.get("download_speed") or item.get("speed") or item.get("download") or item.get("kbs") or 0)
+                            speed = float(item.get("speed") or item.get("download_speed") or item.get("bandwidth") or item.get("download") or 0)
                         except Exception:
                             speed = 0.0
 
-                        # 兼容不同接口的延迟字段 (ms)
+                        # 延迟获取
                         try:
-                            lat = float(item.get("latency") or item.get("delay") or item.get("ping") or 999)
+                            lat_val = item.get("rtt_avg") or item.get("latency") or item.get("delay") or item.get("ping") or item.get("ltLatencyAvg") or item.get("ydLatencyAvg") or item.get("dxLatencyAvg")
+                            lat = float(lat_val) if lat_val is not None else 999.0
                         except Exception:
                             lat = 999.0
                             
-                        # 兼容不同接口的线路标识
-                        line_tag = str(item.get("line") or item.get("type") or item.get("line_type") or item.get("node") or "").lower().strip()
+                        # **统一转换为小写字符串，防止大小写影响匹配**
+                        raw_line = str(item.get("line") or item.get("type") or item.get("line_name") or item.get("node") or "")
+                        line_tag = raw_line.lower().strip()
+                        
                         ip_records.append({'ip': c_ip, 'speed': speed, 'latency': lat, 'line': line_tag})
 
                 fetched_this_time = len(ip_records) - count_before
                 print(f"   ↳ 成功提取到 {fetched_this_time} 个有效 IP")
-
-                if fetched_this_time == 0:
-                    print(f"   ℹ️ [调试日志] 接口返回内容示例: {str(raw_json)[:200]}")
-                
                 continue
 
-            except Exception as json_err:
-                pass  # 非 JSON 则继续尝试文本按行解析
+            except Exception:
+                pass
 
-            # 2. 纯文本逐行解析
+            # 备用：纯文本按行提取
             lines = resp.text.splitlines()
             count_before = len(ip_records)
             for line in lines:
@@ -101,15 +115,15 @@ def fetch_and_rank_ips():
         except Exception as e:
             print(f"   ❌ 抓取发生异常: {e}")
 
-    # **核心排序逻辑：速度降序(-x['speed'])优先，延迟升序(x['latency'])其次**
+    # **排序逻辑：速度降序，延迟升序**
     ip_records.sort(key=lambda x: (-x['speed'], x['latency']))
 
-    # 线路分配逻辑
+    # 线路归类（全小写判定）
     line_map = {'电信': [], '联通': [], '移动': [], '多线': []}
 
     for rec in ip_records:
         ip = rec['ip']
-        tag = rec['line']
+        tag = rec['line']  # 已转为小写
         
         if 'ct' in tag:
             if ip not in line_map['电信']: line_map['电信'].append(ip)
@@ -118,7 +132,7 @@ def fetch_and_rank_ips():
         elif 'cm' in tag:
             if ip not in line_map['移动']: line_map['移动'].append(ip)
         elif 'cn' in tag or 'allavg' in tag or 'all' in tag:
-            # 显式将 cn 与 AllAvg 划分至多线
+            # 精准包含 cn 和 allavg (匹配 AllAvg)
             if ip not in line_map['多线']: line_map['多线'].append(ip)
         else:
             if ip not in line_map['多线']: line_map['多线'].append(ip)
@@ -132,13 +146,13 @@ def main():
     
     line_map, sorted_all_ips = fetch_and_rank_ips()
 
-    # 保底 IP 库（防止 API 彻底失效时无 IP 可用）
+    # 保底 IP 库
     fallback_ips = [
         '104.16.182.154', '104.17.152.212', '104.18.143.64', '104.19.171.91',
         '104.29.126.212', '162.159.143.133', '172.64.229.88', '172.64.229.54'
     ]
 
-    # 自动补全各线路不足的数量
+    # 补齐不足的数量
     pool = sorted_all_ips + fallback_ips
     for key in line_map:
         for p_ip in pool:
@@ -147,7 +161,7 @@ def main():
             if p_ip not in line_map[key]:
                 line_map[key].append(p_ip)
 
-    # 读取 template.yaml
+    # 读取模板
     try:
         with open('template.yaml', 'r', encoding='utf-8') as f:
             template = yaml.safe_load(f)
@@ -155,7 +169,7 @@ def main():
         print(f"❌ 读取 template.yaml 失败: {e}")
         return
 
-    # 逐一更新代理节点
+    # 替换节点
     updated_count = 0
     for proxy in template.get('proxies', []):
         p_name = proxy.get('name', '')
@@ -176,11 +190,11 @@ def main():
         elif '多线优选01' in p_name: proxy['server'] = line_map['多线'][0]; updated_count += 1
         elif '多线优选02' in p_name: proxy['server'] = line_map['多线'][1]; updated_count += 1
 
-    # 导出 sub.yaml
+    # 写入文件
     with open('sub.yaml', 'w', encoding='utf-8') as f:
         yaml.dump(template, f, allow_unicode=True, sort_keys=False)
 
-    print(f"✨ 替换完成！已成功更新 {updated_count} 个节点 IP 并生成 sub.yaml。")
+    print(f"✨ 替换完成！已更新 {updated_count} 个节点 IP 并保存至 sub.yaml。")
 
 if __name__ == '__main__':
     main()
