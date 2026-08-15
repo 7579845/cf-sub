@@ -58,7 +58,7 @@ proxies:
       Host: jp.7579845.xyz
 - name: JP-04 (电信优选01)
   type: vless
-  server: 172.64.159.178
+  server: 104.18.38.221
   port: 443
   uuid: 21a6582b-1e11-4044-b109-17f0b1a669e8
   tls: true
@@ -71,7 +71,7 @@ proxies:
       Host: jp.7579845.xyz
 - name: JP-05 (电信优选02)
   type: vless
-  server: 104.18.38.221
+  server: 172.64.159.178
   port: 443
   uuid: 21a6582b-1e11-4044-b109-17f0b1a669e8
   tls: true
@@ -84,7 +84,7 @@ proxies:
       Host: jp.7579845.xyz
 - name: JP-06 (联通优选01)
   type: vless
-  server: 162.159.152.185
+  server: 104.17.142.43
   port: 443
   uuid: 21a6582b-1e11-4044-b109-17f0b1a669e8
   tls: true
@@ -97,7 +97,7 @@ proxies:
       Host: jp.7579845.xyz
 - name: JP-07 (联通优选02)
   type: vless
-  server: 104.17.142.43
+  server: 162.159.152.185
   port: 443
   uuid: 21a6582b-1e11-4044-b109-17f0b1a669e8
   tls: true
@@ -110,7 +110,7 @@ proxies:
       Host: jp.7579845.xyz
 - name: JP-08 (移动优选01)
   type: vless
-  server: 108.162.192.15
+  server: 141.101.114.10
   port: 443
   uuid: 21a6582b-1e11-4044-b109-17f0b1a669e8
   tls: true
@@ -123,7 +123,7 @@ proxies:
       Host: jp.7579845.xyz
 - name: JP-09 (移动优选02)
   type: vless
-  server: 141.101.114.10
+  server: 108.162.192.15
   port: 443
   uuid: 21a6582b-1e11-4044-b109-17f0b1a669e8
   tls: true
@@ -162,7 +162,7 @@ proxies:
       Host: kr.7579845.xyz
 - name: KR-03 (电信优选01)
   type: vless
-  server: 172.64.159.178
+  server: 104.18.38.221
   port: 443
   uuid: d45fa605-eae6-4f92-b7fe-fb5a871c8b5e
   tls: true
@@ -175,7 +175,7 @@ proxies:
       Host: kr.7579845.xyz
 - name: KR-04 (电信优选02)
   type: vless
-  server: 104.18.38.221
+  server: 172.64.159.178
   port: 443
   uuid: d45fa605-eae6-4f92-b7fe-fb5a871c8b5e
   tls: true
@@ -188,7 +188,7 @@ proxies:
       Host: kr.7579845.xyz
 - name: KR-05 (联通优选01)
   type: vless
-  server: 162.159.152.185
+  server: 104.17.142.43
   port: 443
   uuid: d45fa605-eae6-4f92-b7fe-fb5a871c8b5e
   tls: true
@@ -201,7 +201,7 @@ proxies:
       Host: kr.7579845.xyz
 - name: KR-06 (联通优选02)
   type: vless
-  server: 104.17.142.43
+  server: 162.159.152.185
   port: 443
   uuid: d45fa605-eae6-4f92-b7fe-fb5a871c8b5e
   tls: true
@@ -214,7 +214,7 @@ proxies:
       Host: kr.7579845.xyz
 - name: KR-07 (移动优选01)
   type: vless
-  server: 108.162.192.15
+  server: 141.101.114.10
   port: 443
   uuid: d45fa605-eae6-4f92-b7fe-fb5a871c8b5e
   tls: true
@@ -227,7 +227,7 @@ proxies:
       Host: kr.7579845.xyz
 - name: KR-08 (移动优选02)
   type: vless
-  server: 141.101.114.10
+  server: 108.162.192.15
   port: 443
   uuid: d45fa605-eae6-4f92-b7fe-fb5a871c8b5e
   tls: true
@@ -279,7 +279,7 @@ proxies:
       Host: sg.7579845.xyz
 - name: SG-04 (电信优选01)
   type: vless
-  server: 172.64.159.178
+  server: 104.18.38.221
   port: 443
   uuid: a744eb52-02d8-4503-bfab-cf30e37a0197
   tls: true
@@ -292,7 +292,7 @@ proxies:
       Host: sg.7579845.xyz
 - name: SG-05 (电信优选02)
   type: vless
-  server: 104.18.38.221
+  server: 172.64.159.178
   port: 443
   uuid: a744eb52-02d8-4503-bfab-cf30e37a0197
   tls: true
@@ -305,7 +305,7 @@ proxies:
       Host: sg.7579845.xyz
 - name: SG-06 (联通优选01)
   type: vless
-  server: 162.159.152.185
+  server: 104.17.142.43
   port: 443
   uuid: a744eb52-02d8-4503-bfab-cf30e37a0197
   tls: true
@@ -318,7 +318,7 @@ proxies:
       Host: sg.7579845.xyz
 - name: SG-07 (联通优选02)
   type: vless
-  server: 104.17.142.43
+  server: 162.159.152.185
   port: 443
   uuid: a744eb52-02d8-4503-bfab-cf30e37a0197
   tls: true
@@ -331,7 +331,7 @@ proxies:
       Host: sg.7579845.xyz
 - name: SG-08 (移动优选01)
   type: vless
-  server: 108.162.192.15
+  server: 141.101.114.10
   port: 443
   uuid: a744eb52-02d8-4503-bfab-cf30e37a0197
   tls: true
@@ -344,7 +344,7 @@ proxies:
       Host: sg.7579845.xyz
 - name: SG-09 (移动优选02)
   type: vless
-  server: 141.101.114.10
+  server: 108.162.192.15
   port: 443
   uuid: a744eb52-02d8-4503-bfab-cf30e37a0197
   tls: true
