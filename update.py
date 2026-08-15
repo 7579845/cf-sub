@@ -3,7 +3,10 @@ import json
 import yaml
 
 # 基础配置
-BASE_URL = "https://api.uouin.com/app/cloudflare?username=f7579845&key=lqCB27tmVTf8uC3"
+API_URL = "https://api.uouin.com/app/cloudflare"
+USERNAME = "f7579845"
+KEY = "lqCB27tmVTf8uC3"
+
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
     "Accept": "application/json, text/plain, */*"
@@ -12,10 +15,10 @@ HEADERS = {
 def fetch_uouin_ips():
     selected_ips = {'电信': [], '联通': [], '移动': [], '多线': []}
     
-    # 拆分为两次请求，突破 API 限制最多 3 个类型的限制
-    urls = [
-        f"{BASE_URL}&nodeid=ctcc|cmcc|cucc",
-        f"{BASE_URL}&nodeid=bgp"
+    # 拆分两次请求（通过 params 字典传递参数，自动进行 URL 编码）
+    requests_targets = [
+        {'nodeid': 'ctcc|cmcc|cucc'},
+        {'nodeid': 'bgp'}
     ]
     
     isp_mapping = {
@@ -25,10 +28,15 @@ def fetch_uouin_ips():
         'bgp': '多线'
     }
 
-    for url in urls:
+    for target in requests_targets:
+        params = {
+            'username': USERNAME,
+            'key': KEY,
+            'nodeid': target['nodeid']
+        }
         try:
-            print(f"📡 正在请求 API: {url}")
-            resp = requests.get(url, headers=HEADERS, timeout=15)
+            print(f"📡 正在获取 [{target['nodeid']}] 节点的最新 IP...")
+            resp = requests.get(API_URL, params=params, headers=HEADERS, timeout=15)
             
             if resp.status_code == 200:
                 res_data = resp.json()
@@ -43,7 +51,7 @@ def fetch_uouin_ips():
                         pass
                 
                 for isp_key, isp_name in isp_mapping.items():
-                    if isp_key in data_body:
+                    if isinstance(data_body, dict) and isp_key in data_body:
                         isp_obj = data_body.get(isp_key, {})
                         
                         if isinstance(isp_obj, list):
@@ -56,22 +64,23 @@ def fetch_uouin_ips():
                         for item in info_list:
                             if isinstance(item, dict):
                                 ip = item.get('ip', '').strip()
-                                # 电信/联通/移动存前 4 个，多线(BGP)存前 2 个
                                 limit = 2 if isp_name == '多线' else 4
                                 if ip and ip.count('.') == 3 and len(selected_ips[isp_name]) < limit:
                                     selected_ips[isp_name].append(ip)
+            else:
+                print(f"⚠️ API 返回异常，状态码: {resp.status_code}")
 
         except Exception as e:
             print(f"❌ 抓取 API 出错: {e}")
 
-    print("✅ 成功解析最新优选 IP：")
+    print("✅ 成功提取最新 IP 结果：")
     print(f"   【电信】: {selected_ips['电信']}")
     print(f"   【联通】: {selected_ips['联通']}")
     print(f"   【移动】: {selected_ips['移动']}")
     print(f"   【多线(BGP)】: {selected_ips['多线']}")
 
     # 保底 IP 补全机制
-    default_ctcc = ['172.64.229.15', '172.66.44.119', '104.17.52.141', '104.19.77.157']
+    default_ctcc = ['172.64.229.88', '104.19.171.91', '104.18.143.64', '104.16.182.154']
     default_cucc = ['104.17.142.43', '162.159.152.185', '104.16.160.1', '104.17.160.1']
     default_cmcc = ['141.101.114.10', '108.162.192.15', '141.101.115.10', '108.162.193.15']
     default_bgp  = ['162.159.137.85', '162.159.138.85']
@@ -133,7 +142,7 @@ def main():
             proxy['server'] = selected_map['移动'][1]
             updated_count += 1
 
-        # 多线优选 01 - 02（真实填入 BGP 优选 IP）
+        # 多线优选 01 - 02
         elif '多线优选01' in p_name:
             proxy['server'] = selected_map['多线'][0]
             updated_count += 1
