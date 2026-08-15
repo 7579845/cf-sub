@@ -41,7 +41,7 @@ def flatten_ip_items(data_obj):
     return extracted_items
 
 def fetch_and_rank_ips():
-    """抓取 IP，按【速度优先，延迟其次】排序并划分线路"""
+    """抓取 IP，并按条件做分段优化排序"""
     ip_records = []
     seen_ips = set()
 
@@ -85,7 +85,6 @@ def fetch_and_rank_ips():
                         except Exception:
                             lat = 999.0
                             
-                        # 统一转换为小写字符串
                         raw_line = str(item.get("line") or item.get("type") or item.get("line_name") or item.get("node") or "")
                         line_tag = raw_line.lower().strip()
                         
@@ -98,7 +97,6 @@ def fetch_and_rank_ips():
             except Exception:
                 pass
 
-            # 备用：纯文本按行提取
             lines = resp.text.splitlines()
             count_before = len(ip_records)
             for line in lines:
@@ -113,8 +111,21 @@ def fetch_and_rank_ips():
         except Exception as e:
             print(f"   ❌ 抓取发生异常: {e}")
 
-    # **核心逻辑：速度降序(-x['speed'])优先，延迟升序(x['latency'])其次**
-    ip_records.sort(key=lambda x: (-x['speed'], x['latency']))
+    # **核心逻辑：条件分段排序**
+    # 1. 速度 >= 80 MB/s：高速组，【速度优先】（速度从大到小，延迟从小到大）
+    # 2. 50 <= 速度 < 80 MB/s：中速组，【速度优先】
+    # 3. 速度 < 50 MB/s（含 0 速度）：低速/保底组，【延迟优先】（延迟从小到大，速度从大到小）
+    def custom_sort_rule(x):
+        s = x['speed']
+        l = x['latency']
+        if s >= 80.0:
+            return (1, -s, l)      # 梯队 1：速度降序，延迟升序
+        elif s >= 50.0:
+            return (2, -s, l)      # 梯队 2：速度降序，延迟升序
+        else:
+            return (3, l, -s)      # 梯队 3：延迟升序，速度降序
+
+    ip_records.sort(key=custom_sort_rule)
 
     # 线路归类
     line_map = {'电信': [], '联通': [], '移动': [], '多线': []}
@@ -137,13 +148,14 @@ def fetch_and_rank_ips():
     sorted_all_ips = [r['ip'] for r in ip_records]
     print(f"\n📊 汇总结果：电信({len(line_map['电信'])}个) | 联通({len(line_map['联通'])}个) | 移动({len(line_map['移动'])}个) | 多线/cn/AllAvg({len(line_map['多线'])}个)")
     
-    # **【新增】全量打印所有抓取到的 IP 明细排行榜**
     if ip_records:
-        print("\n📋 【所有优选 IP 综合排行榜】")
+        print("\n📋 【所有优选 IP 动态分段排行榜】")
         for idx, rec in enumerate(ip_records, 1):
             line_display = rec['line'].upper() if rec['line'] else "其它"
-            print(f"   [{idx:02d}] IP: {rec['ip']:<15} | 线路: {line_display:<6} | 速度: {rec['speed']:>6.1f} MB/s | 延迟: {rec['latency']:>5.1f} ms")
-        print("-" * 65)
+            # 标注当前 IP 触发的排序规则
+            tag = "⚡高速优先" if rec['speed'] >= 80 else ("速度优先" if rec['speed'] >= 50 else "🎯延迟优先")
+            print(f"   [{idx:02d}] IP: {rec['ip']:<15} | 线路: {line_display:<6} | 速度: {rec['speed']:>6.1f} MB/s | 延迟: {rec['latency']:>5.1f} ms | 规则: {tag}")
+        print("-" * 75)
 
     return line_map, sorted_all_ips
 
@@ -152,13 +164,11 @@ def main():
     
     line_map, sorted_all_ips = fetch_and_rank_ips()
 
-    # 保底 IP 库
     fallback_ips = [
         '104.16.182.154', '104.17.152.212', '104.18.143.64', '104.19.171.91',
         '104.29.126.212', '162.159.143.133', '172.64.229.88', '172.64.229.54'
     ]
 
-    # 补齐不足的数量
     pool = sorted_all_ips + fallback_ips
     for key in line_map:
         for p_ip in pool:
@@ -167,7 +177,6 @@ def main():
             if p_ip not in line_map[key]:
                 line_map[key].append(p_ip)
 
-    # 读取模板
     try:
         with open('template.yaml', 'r', encoding='utf-8') as f:
             template = yaml.safe_load(f)
@@ -175,7 +184,6 @@ def main():
         print(f"❌ 读取 template.yaml 失败: {e}")
         return
 
-    # 替换节点
     updated_count = 0
     for proxy in template.get('proxies', []):
         p_name = proxy.get('name', '')
@@ -196,7 +204,6 @@ def main():
         elif '多线优选01' in p_name: proxy['server'] = line_map['多线'][0]; updated_count += 1
         elif '多线优选02' in p_name: proxy['server'] = line_map['多线'][1]; updated_count += 1
 
-    # 写入文件
     with open('sub.yaml', 'w', encoding='utf-8') as f:
         yaml.dump(template, f, allow_unicode=True, sort_keys=False)
 
