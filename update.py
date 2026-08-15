@@ -2,7 +2,6 @@ import requests
 import json
 import yaml
 
-# 基础配置
 API_URL = "https://api.uouin.com/app/cloudflare"
 USERNAME = "f7579845"
 KEY = "lqCB27tmVTf8uC3"
@@ -15,81 +14,81 @@ HEADERS = {
 def fetch_uouin_ips():
     selected_ips = {'电信': [], '联通': [], '移动': [], '多线': []}
     
-    # 拆分两次请求（通过 params 字典传递参数，自动进行 URL 编码）
-    requests_targets = [
-        {'nodeid': 'ctcc|cmcc|cucc'},
-        {'nodeid': 'bgp'}
-    ]
-    
     isp_mapping = {
-        'ctcc': '电信',
-        'cmcc': '移动',
-        'cucc': '联通',
-        'bgp': '多线'
+        'ctcc': ('电信', 4),
+        'cucc': ('联通', 4),
+        'cmcc': ('移动', 2),
+        'bgp':  ('多线', 2)
     }
 
-    for target in requests_targets:
-        params = {
-            'username': USERNAME,
-            'key': KEY,
-            'nodeid': target['nodeid']
-        }
-        try:
-            print(f"📡 正在获取 [{target['nodeid']}] 节点的最新 IP...")
-            resp = requests.get(API_URL, params=params, headers=HEADERS, timeout=15)
-            
-            if resp.status_code == 200:
-                res_data = resp.json()
-                if isinstance(res_data, str):
-                    res_data = json.loads(res_data)
+    params = {
+        'username': USERNAME,
+        'key': KEY
+    }
 
-                data_body = res_data.get('data', res_data)
-                if isinstance(data_body, str):
-                    try:
-                        data_body = json.loads(data_body)
-                    except:
-                        pass
-                
-                for isp_key, isp_name in isp_mapping.items():
-                    if isinstance(data_body, dict) and isp_key in data_body:
-                        isp_obj = data_body.get(isp_key, {})
-                        
-                        if isinstance(isp_obj, list):
-                            info_list = isp_obj
-                        elif isinstance(isp_obj, dict):
-                            info_list = isp_obj.get('info', [])
+    try:
+        print("📡 正在向 API 请求最新 Cloudflare 优选 IP...")
+        resp = requests.get(API_URL, params=params, headers=HEADERS, timeout=15)
+        
+        if resp.status_code == 200:
+            res_data = resp.json()
+            if isinstance(res_data, str):
+                res_data = json.loads(res_data)
+
+            # 获取数据主体
+            data_body = res_data.get('data', res_data)
+            if isinstance(data_body, str):
+                try:
+                    data_body = json.loads(data_body)
+                except:
+                    pass
+
+            # 解析各线路 IP
+            if isinstance(data_body, dict):
+                for key, (isp_name, max_count) in isp_mapping.items():
+                    isp_data = data_body.get(key, [])
+                    
+                    # 兼容不同层级的 JSON 结构
+                    if isinstance(isp_data, dict):
+                        info_list = isp_data.get('info', [])
+                    elif isinstance(isp_data, list):
+                        info_list = isp_data
+                    else:
+                        info_list = []
+
+                    for item in info_list:
+                        if isinstance(item, dict):
+                            ip = item.get('ip', '').strip()
+                        elif isinstance(item, str):
+                            ip = item.strip()
                         else:
-                            info_list = []
-                            
-                        for item in info_list:
-                            if isinstance(item, dict):
-                                ip = item.get('ip', '').strip()
-                                limit = 2 if isp_name == '多线' else 4
-                                if ip and ip.count('.') == 3 and len(selected_ips[isp_name]) < limit:
-                                    selected_ips[isp_name].append(ip)
-            else:
-                print(f"⚠️ API 返回异常，状态码: {resp.status_code}")
+                            ip = ''
 
-        except Exception as e:
-            print(f"❌ 抓取 API 出错: {e}")
+                        if ip and ip.count('.') == 3 and len(selected_ips[isp_name]) < max_count:
+                            selected_ips[isp_name].append(ip)
+        else:
+            print(f"⚠️ API 返回状态码异常: {resp.status_code}")
 
-    print("✅ 成功提取最新 IP 结果：")
+    except Exception as e:
+        print(f"❌ 抓取 API 出错: {e}")
+
+    print("\n✅ 最新抓取到的网页真实 IP 如下：")
     print(f"   【电信】: {selected_ips['电信']}")
     print(f"   【联通】: {selected_ips['联通']}")
     print(f"   【移动】: {selected_ips['移动']}")
-    print(f"   【多线(BGP)】: {selected_ips['多线']}")
+    print(f"   【多线】: {selected_ips['多线']}\n")
 
-    # 保底 IP 补全机制
+    # 仅当 API 彻底失效时才补充默认 IP
     default_ctcc = ['172.64.229.88', '104.19.171.91', '104.18.143.64', '104.16.182.154']
-    default_cucc = ['104.17.142.43', '162.159.152.185', '104.16.160.1', '104.17.160.1']
-    default_cmcc = ['141.101.114.10', '108.162.192.15', '141.101.115.10', '108.162.193.15']
-    default_bgp  = ['162.159.137.85', '162.159.138.85']
+    default_cucc = ['104.17.152.212', '104.29.126.212', '104.17.156.102', '162.159.143.133']
+    default_cmcc = ['104.19.47.75', '104.16.156.210']
+    default_bgp  = ['172.64.229.54', '104.18.46.20']
 
     for i in range(4):
         if len(selected_ips['电信']) <= i: selected_ips['电信'].append(default_ctcc[i])
         if len(selected_ips['联通']) <= i: selected_ips['联通'].append(default_cucc[i])
-        if len(selected_ips['移动']) <= i: selected_ips['移动'].append(default_cmcc[i])
     for i in range(2):
+        if len(selected_ips['移动']) <= i: selected_ips['移动'].append(default_cmcc[i])
         if len(selected_ips['多线']) <= i: selected_ips['多线'].append(default_bgp[i])
 
     return selected_ips
