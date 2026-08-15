@@ -2,78 +2,86 @@ import requests
 import json
 import yaml
 
-# API 请求地址
-API_URL = "https://api.uouin.com/app/cloudflare?username=f7579845&key=lqCB27tmVTf8uC3&nodeid=ctcc|cmcc|cucc"
-
+# 基础配置
+BASE_URL = "https://api.uouin.com/app/cloudflare?username=f7579845&key=lqCB27tmVTf8uC3"
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
     "Accept": "application/json, text/plain, */*"
 }
 
 def fetch_uouin_ips():
-    selected_ips = {'电信': [], '联通': [], '移动': []}
+    selected_ips = {'电信': [], '联通': [], '移动': [], '多线': []}
     
-    try:
-        print(f"📡 正在请求专属 API: {API_URL}")
-        resp = requests.get(API_URL, headers=HEADERS, timeout=15)
-        print(f" HTTP 状态码: {resp.status_code}")
-        
-        if resp.status_code == 200:
-            res_data = resp.json()
-            print("📄 接口返回原始 JSON:", json.dumps(res_data, ensure_ascii=False)[:300]) # 打印前300字符用于排查
-            
-            # 如果 response 是字符串格式的 JSON，尝试二次解析
-            if isinstance(res_data, str):
-                res_data = json.loads(res_data)
+    # 拆分为两次请求，突破 API 限制最多 3 个类型的限制
+    urls = [
+        f"{BASE_URL}&nodeid=ctcc|cmcc|cucc",
+        f"{BASE_URL}&nodeid=bgp"
+    ]
+    
+    isp_mapping = {
+        'ctcc': '电信',
+        'cmcc': '移动',
+        'cucc': '联通',
+        'bgp': '多线'
+    }
 
-            # 兼容不同的 data 嵌套层级
-            data_body = res_data.get('data', res_data)
-            if isinstance(data_body, str):
-                try:
-                    data_body = json.loads(data_body)
-                except:
-                    pass
+    for url in urls:
+        try:
+            print(f"📡 正在请求 API: {url}")
+            resp = requests.get(url, headers=HEADERS, timeout=15)
             
-            isp_mapping = {
-                'ctcc': '电信',
-                'cmcc': '移动',
-                'cucc': '联通'
-            }
-            
-            for isp_key, isp_name in isp_mapping.items():
-                isp_obj = data_body.get(isp_key, {})
+            if resp.status_code == 200:
+                res_data = resp.json()
+                if isinstance(res_data, str):
+                    res_data = json.loads(res_data)
+
+                data_body = res_data.get('data', res_data)
+                if isinstance(data_body, str):
+                    try:
+                        data_body = json.loads(data_body)
+                    except:
+                        pass
                 
-                # 如果返回的是列表而非字典结构
-                if isinstance(isp_obj, list):
-                    info_list = isp_obj
-                elif isinstance(isp_obj, dict):
-                    info_list = isp_obj.get('info', [])
-                else:
-                    info_list = []
-                    
-                for item in info_list:
-                    if isinstance(item, dict):
-                        ip = item.get('ip', '').strip()
-                        if ip and ip.count('.') == 3 and len(selected_ips[isp_name]) < 2:
-                            selected_ips[isp_name].append(ip)
+                for isp_key, isp_name in isp_mapping.items():
+                    if isp_key in data_body:
+                        isp_obj = data_body.get(isp_key, {})
+                        
+                        if isinstance(isp_obj, list):
+                            info_list = isp_obj
+                        elif isinstance(isp_obj, dict):
+                            info_list = isp_obj.get('info', [])
+                        else:
+                            info_list = []
+                            
+                        for item in info_list:
+                            if isinstance(item, dict):
+                                ip = item.get('ip', '').strip()
+                                # 电信/联通/移动存前 4 个，多线(BGP)存前 2 个
+                                limit = 2 if isp_name == '多线' else 4
+                                if ip and ip.count('.') == 3 and len(selected_ips[isp_name]) < limit:
+                                    selected_ips[isp_name].append(ip)
 
-            print("✅ 成功解析最新优选 IP：")
-            print(f"   【电信】: {selected_ips['电信']}")
-            print(f"   【联通】: {selected_ips['联通']}")
-            print(f"   【移动】: {selected_ips['移动']}")
-        else:
-            print(f"⚠️ API 请求返回非 200 状态")
-    except Exception as e:
-        print(f"❌ 抓取或解析 API 出错: {e}")
+        except Exception as e:
+            print(f"❌ 抓取 API 出错: {e}")
 
-    # 保底 IP 机制（仅在 API 解析彻底失败时启用图二最新 IP 作为备用）
-    if not selected_ips['电信']:
-        print("⚠️ 未获取到电信 IP，使用最新备用 IP")
-        selected_ips['电信'] = ['172.64.229.15', '172.66.44.119']
-    if not selected_ips['联通']:
-        selected_ips['联通'] = ['104.17.142.43', '162.159.152.185']
-    if not selected_ips['移动']:
-        selected_ips['移动'] = ['141.101.114.10', '108.162.192.15']
+    print("✅ 成功解析最新优选 IP：")
+    print(f"   【电信】: {selected_ips['电信']}")
+    print(f"   【联通】: {selected_ips['联通']}")
+    print(f"   【移动】: {selected_ips['移动']}")
+    print(f"   【多线(BGP)】: {selected_ips['多线']}")
+
+    # 保底 IP 补全机制
+    default_ctcc = ['172.64.229.15', '172.66.44.119', '104.17.52.141', '104.19.77.157']
+    default_cucc = ['104.17.142.43', '162.159.152.185', '104.16.160.1', '104.17.160.1']
+    default_cmcc = ['141.101.114.10', '108.162.192.15', '141.101.115.10', '108.162.193.15']
+    default_bgp  = ['162.159.137.85', '162.159.138.85']
+
+    for i in range(4):
+        if len(selected_ips['电信']) <= i: selected_ips['电信'].append(default_ctcc[i])
+        if len(selected_ips['联通']) <= i: selected_ips['联通'].append(default_cucc[i])
+        if len(selected_ips['移动']) <= i: selected_ips['移动'].append(default_cmcc[i])
+    for i in range(2):
+        if len(selected_ips['多线']) <= i: selected_ips['多线'].append(default_bgp[i])
 
     return selected_ips
 
@@ -89,23 +97,48 @@ def main():
     for proxy in template.get('proxies', []):
         p_name = proxy.get('name', '')
         
-        if '电信优选01' in p_name and len(selected_map['电信']) >= 1:
+        # 电信 01 - 04
+        if '电信优选01' in p_name:
             proxy['server'] = selected_map['电信'][0]
             updated_count += 1
-        elif '电信优选02' in p_name and len(selected_map['电信']) >= 2:
+        elif '电信优选02' in p_name:
             proxy['server'] = selected_map['电信'][1]
             updated_count += 1
-        elif '联通优选01' in p_name and len(selected_map['联通']) >= 1:
+        elif '电信优选03' in p_name:
+            proxy['server'] = selected_map['电信'][2]
+            updated_count += 1
+        elif '电信优选04' in p_name:
+            proxy['server'] = selected_map['电信'][3]
+            updated_count += 1
+            
+        # 联通 01 - 04
+        elif '联通优选01' in p_name:
             proxy['server'] = selected_map['联通'][0]
             updated_count += 1
-        elif '联通优选02' in p_name and len(selected_map['联通']) >= 2:
+        elif '联通优选02' in p_name:
             proxy['server'] = selected_map['联通'][1]
             updated_count += 1
-        elif '移动优选01' in p_name and len(selected_map['移动']) >= 1:
+        elif '联通优选03' in p_name:
+            proxy['server'] = selected_map['联通'][2]
+            updated_count += 1
+        elif '联通优选04' in p_name:
+            proxy['server'] = selected_map['联通'][3]
+            updated_count += 1
+
+        # 移动 01 - 02
+        elif '移动优选01' in p_name:
             proxy['server'] = selected_map['移动'][0]
             updated_count += 1
-        elif '移动优选02' in p_name and len(selected_map['移动']) >= 2:
+        elif '移动优选02' in p_name:
             proxy['server'] = selected_map['移动'][1]
+            updated_count += 1
+
+        # 多线优选 01 - 02（真实填入 BGP 优选 IP）
+        elif '多线优选01' in p_name:
+            proxy['server'] = selected_map['多线'][0]
+            updated_count += 1
+        elif '多线优选02' in p_name:
+            proxy['server'] = selected_map['多线'][1]
             updated_count += 1
 
     print(f"✨ 成功替换了 {updated_count} 个优选节点的 IP 地址！")
