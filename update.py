@@ -32,7 +32,6 @@ def flatten_ip_items(data_obj):
             if isinstance(val, list):
                 for item in val:
                     if isinstance(item, dict):
-                        # 若节点内缺少 line 标识，将父级 key (如 CM/CT/CU/AllAvg) 填入
                         if not item.get("line") and not item.get("type") and not item.get("line_name"):
                             item["line"] = str(key)
                         extracted_items.append(item)
@@ -58,7 +57,6 @@ def fetch_and_rank_ips():
             try:
                 raw_json = resp.json()
                 
-                # 获取数据核心字段
                 container = raw_json
                 if isinstance(raw_json, dict):
                     for k in ["info", "data", "result", "list"]:
@@ -87,7 +85,7 @@ def fetch_and_rank_ips():
                         except Exception:
                             lat = 999.0
                             
-                        # **统一转换为小写字符串，防止大小写影响匹配**
+                        # 统一转换为小写字符串，精准匹配 cm/ct/cu/cn/allavg
                         raw_line = str(item.get("line") or item.get("type") or item.get("line_name") or item.get("node") or "")
                         line_tag = raw_line.lower().strip()
                         
@@ -115,7 +113,7 @@ def fetch_and_rank_ips():
         except Exception as e:
             print(f"   ❌ 抓取发生异常: {e}")
 
-    # **排序逻辑：速度降序，延迟升序**
+    # **核心逻辑：速度降序(-x['speed'])优先，延迟升序(x['latency'])其次**
     ip_records.sort(key=lambda x: (-x['speed'], x['latency']))
 
     # 线路归类（全小写判定）
@@ -123,7 +121,7 @@ def fetch_and_rank_ips():
 
     for rec in ip_records:
         ip = rec['ip']
-        tag = rec['line']  # 已转为小写
+        tag = rec['line']
         
         if 'ct' in tag:
             if ip not in line_map['电信']: line_map['电信'].append(ip)
@@ -132,13 +130,18 @@ def fetch_and_rank_ips():
         elif 'cm' in tag:
             if ip not in line_map['移动']: line_map['移动'].append(ip)
         elif 'cn' in tag or 'allavg' in tag or 'all' in tag:
-            # 精准包含 cn 和 allavg (匹配 AllAvg)
             if ip not in line_map['多线']: line_map['多线'].append(ip)
         else:
             if ip not in line_map['多线']: line_map['多线'].append(ip)
 
     sorted_all_ips = [r['ip'] for r in ip_records]
     print(f"\n📊 汇总结果：电信({len(line_map['电信'])}个) | 联通({len(line_map['联通'])}个) | 移动({len(line_map['移动'])}个) | 多线/cn/AllAvg({len(line_map['多线'])}个)")
+    
+    # 打印排第一名的节点明细
+    if ip_records:
+        top = ip_records[0]
+        print(f"🏆 综合排序第 1 优选 IP: {top['ip']} | 速度: {top['speed']} MB/s | 延迟: {top['latency']} ms")
+
     return line_map, sorted_all_ips
 
 def main():
