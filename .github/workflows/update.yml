@@ -1,19 +1,17 @@
-name: Auto Update Sub
+name: Auto Update Cloudflare IPs
 
 on:
   schedule:
-    # 每 4 小时自动触发一次 (北京时间 0:00, 4:00, 8:00, 12:00, 16:00, 20:00)
-    - cron: '0 */4 * * *'
-  workflow_dispatch: # 保留手动触发按钮
+    # 国际标准时间 (UTC) 每小时第 0 分钟触发（相当于北京时间每整点运行）
+    - cron: '0 * * * *'
+  workflow_dispatch: # 保留 GitHub 页面手动点击触发按钮
 
 jobs:
-  build:
+  update-ip:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
 
     steps:
-      - name: 检出代码
+      - name: 检出仓库代码
         uses: actions/checkout@v4
 
       - name: 配置 Python 环境
@@ -21,18 +19,16 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: 安装依赖包
+      - name: 安装 Python 依赖
         run: |
-          python -m pip install --upgrade pip
           pip install requests pyyaml
 
-      - name: 运行更新脚本
+      - name: 执行优选 IP 更新脚本
         run: python update.py
 
-      - name: 提交并推送更新后的订阅文件
+      - name: 自动提交并推送 sub.yaml 到仓库
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add sub.yaml
-          git diff-index --quiet HEAD || git commit -m "auto: 自动更新 Cloudflare 优选 IP [$(date -u +'%Y-%m-%d %H:%M:%S') UTC]"
-          git push
+          git diff --quiet && git diff --staged --quiet || (git commit -m "🤖 自动更新优选 IP 节点" && git push)
