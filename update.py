@@ -2,27 +2,38 @@ import requests
 import json
 import yaml
 
-# 你的专属 API 接口（带上三网 nodeid 参数）
+# API 请求地址
 API_URL = "https://api.uouin.com/app/cloudflare?username=f7579845&key=lqCB27tmVTf8uC3&nodeid=ctcc|cmcc|cucc"
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    "Accept": "application/json"
+    "Accept": "application/json, text/plain, */*"
 }
 
 def fetch_uouin_ips():
-    """精确解析 uouin 官方文档 API 格式"""
     selected_ips = {'电信': [], '联通': [], '移动': []}
     
     try:
         print(f"📡 正在请求专属 API: {API_URL}")
-        resp = requests.get(API_URL, headers=HEADERS, timeout=12)
+        resp = requests.get(API_URL, headers=HEADERS, timeout=15)
+        print(f" HTTP 状态码: {resp.status_code}")
         
         if resp.status_code == 200:
             res_data = resp.json()
-            data_body = res_data.get('data', {})
+            print("📄 接口返回原始 JSON:", json.dumps(res_data, ensure_ascii=False)[:300]) # 打印前300字符用于排查
             
-            # ctcc -> 电信, cmcc -> 移动, cucc -> 联通
+            # 如果 response 是字符串格式的 JSON，尝试二次解析
+            if isinstance(res_data, str):
+                res_data = json.loads(res_data)
+
+            # 兼容不同的 data 嵌套层级
+            data_body = res_data.get('data', res_data)
+            if isinstance(data_body, str):
+                try:
+                    data_body = json.loads(data_body)
+                except:
+                    pass
+            
             isp_mapping = {
                 'ctcc': '电信',
                 'cmcc': '移动',
@@ -31,9 +42,17 @@ def fetch_uouin_ips():
             
             for isp_key, isp_name in isp_mapping.items():
                 isp_obj = data_body.get(isp_key, {})
-                if isinstance(isp_obj, dict):
+                
+                # 如果返回的是列表而非字典结构
+                if isinstance(isp_obj, list):
+                    info_list = isp_obj
+                elif isinstance(isp_obj, dict):
                     info_list = isp_obj.get('info', [])
-                    for item in info_list:
+                else:
+                    info_list = []
+                    
+                for item in info_list:
+                    if isinstance(item, dict):
                         ip = item.get('ip', '').strip()
                         if ip and ip.count('.') == 3 and len(selected_ips[isp_name]) < 2:
                             selected_ips[isp_name].append(ip)
@@ -43,14 +62,18 @@ def fetch_uouin_ips():
             print(f"   【联通】: {selected_ips['联通']}")
             print(f"   【移动】: {selected_ips['移动']}")
         else:
-            print(f"⚠️ API 请求失败，HTTP 状态码: {resp.status_code}")
+            print(f"⚠️ API 请求返回非 200 状态")
     except Exception as e:
-        print(f"❌ 抓取 API 出错: {e}")
+        print(f"❌ 抓取或解析 API 出错: {e}")
 
-    # 保底 IP 机制（网络彻底断连时触发）
-    if not selected_ips['电信']: selected_ips['电信'] = ['104.18.38.221', '172.64.159.178']
-    if not selected_ips['联通']: selected_ips['联通'] = ['104.17.142.43', '162.159.152.185']
-    if not selected_ips['移动']: selected_ips['移动'] = ['141.101.114.10', '108.162.192.15']
+    # 保底 IP 机制（仅在 API 解析彻底失败时启用图二最新 IP 作为备用）
+    if not selected_ips['电信']:
+        print("⚠️ 未获取到电信 IP，使用最新备用 IP")
+        selected_ips['电信'] = ['172.64.229.15', '172.66.44.119']
+    if not selected_ips['联通']:
+        selected_ips['联通'] = ['104.17.142.43', '162.159.152.185']
+    if not selected_ips['移动']:
+        selected_ips['移动'] = ['141.101.114.10', '108.162.192.15']
 
     return selected_ips
 
@@ -62,7 +85,6 @@ def main():
     with open('template.yaml', 'r', encoding='utf-8') as f:
         template = yaml.safe_load(f)
 
-    # 遍历更新所有节点（包括 JP、KR、SG 地区的所有优选节点）
     updated_count = 0
     for proxy in template.get('proxies', []):
         p_name = proxy.get('name', '')
