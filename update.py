@@ -85,7 +85,7 @@ def fetch_and_rank_ips():
                         except Exception:
                             lat = 999.0
                             
-                        # 统一转换为小写字符串，精准匹配 cm/ct/cu/cn/allavg
+                        # 统一转换为小写字符串
                         raw_line = str(item.get("line") or item.get("type") or item.get("line_name") or item.get("node") or "")
                         line_tag = raw_line.lower().strip()
                         
@@ -116,7 +116,7 @@ def fetch_and_rank_ips():
     # **核心逻辑：速度降序(-x['speed'])优先，延迟升序(x['latency'])其次**
     ip_records.sort(key=lambda x: (-x['speed'], x['latency']))
 
-    # 线路归类（全小写判定）
+    # 线路归类
     line_map = {'电信': [], '联通': [], '移动': [], '多线': []}
 
     for rec in ip_records:
@@ -137,10 +137,13 @@ def fetch_and_rank_ips():
     sorted_all_ips = [r['ip'] for r in ip_records]
     print(f"\n📊 汇总结果：电信({len(line_map['电信'])}个) | 联通({len(line_map['联通'])}个) | 移动({len(line_map['移动'])}个) | 多线/cn/AllAvg({len(line_map['多线'])}个)")
     
-    # 打印排第一名的节点明细
+    # **【新增】全量打印所有抓取到的 IP 明细排行榜**
     if ip_records:
-        top = ip_records[0]
-        print(f"🏆 综合排序第 1 优选 IP: {top['ip']} | 速度: {top['speed']} MB/s | 延迟: {top['latency']} ms")
+        print("\n📋 【所有优选 IP 综合排行榜】")
+        for idx, rec in enumerate(ip_records, 1):
+            line_display = rec['line'].upper() if rec['line'] else "其它"
+            print(f"   [{idx:02d}] IP: {rec['ip']:<15} | 线路: {line_display:<6} | 速度: {rec['speed']:>6.1f} MB/s | 延迟: {rec['latency']:>5.1f} ms")
+        print("-" * 65)
 
     return line_map, sorted_all_ips
 
@@ -197,7 +200,7 @@ def main():
     with open('sub.yaml', 'w', encoding='utf-8') as f:
         yaml.dump(template, f, allow_unicode=True, sort_keys=False)
 
-    print(f"✨ 替换完成！已更新 {updated_count} 个节点 IP 并保存至 sub.yaml。")
+    print(f"\n✨ 替换完成！已更新 {updated_count} 个节点 IP 并保存至 sub.yaml。")
 
 if __name__ == '__main__':
     main()
