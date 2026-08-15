@@ -2,9 +2,12 @@ name: Auto Update Cloudflare IPs
 
 on:
   schedule:
-    # 国际标准时间 (UTC) 每小时第 0 分钟触发（相当于北京时间每整点运行）
     - cron: '0 * * * *'
-  workflow_dispatch: # 保留 GitHub 页面手动点击触发按钮
+  workflow_dispatch:
+
+# **加上这一段声明**
+permissions:
+  contents: write
 
 jobs:
   update-ip:
